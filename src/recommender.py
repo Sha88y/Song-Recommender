@@ -218,6 +218,11 @@ class SongRecommender:
         return re.sub(r"\s+", " ", value.lower().strip())
 
     @staticmethod
+    def _is_missing_label(value: str) -> bool:
+        normalized = (value or "").strip().lower()
+        return normalized in {"", "unknown", "none", "nan", "n/a"}
+
+    @staticmethod
     def _title_key(value: str) -> str:
         lowered = value.lower().strip()
         lowered = re.sub(r"[^a-z0-9\s]", " ", lowered)
@@ -347,6 +352,18 @@ class SongRecommender:
         artist = self._clean_artist(self._get_value(raw_row, ["artist", "artists", "artist_name"], "unknown artist"))
         genre = self._get_value(raw_row, ["genre", "track_genre", "playlist_genre"], "unknown")
         tags = self._get_value(raw_row, ["tags", "playlist_subgenre", "subgenre"])
+
+        if self._is_missing_label(genre):
+            parsed_tags = [self._norm_tag(tag) for tag in self._parse_list_like(tags)]
+            parsed_tags = [tag for tag in parsed_tags if not self._is_missing_label(tag)]
+            if parsed_tags:
+                genre = parsed_tags[0]
+            else:
+                inferred_from_artist = sorted(self.artist_genre_map.get(self._artist_key(artist), set()))
+                if inferred_from_artist:
+                    genre = inferred_from_artist[0]
+                else:
+                    genre = "unknown"
 
         metrics = []
         for key in ["popularity", "energy", "valence", "danceability", "tempo", "year"]:
@@ -513,7 +530,7 @@ class SongRecommender:
         patterns = [
             r"(?:like|zoals)\s+([a-zA-Z0-9\s]+)$",
             r"(?:style of|stijl van|genre van)\s+([a-zA-Z0-9\s]+)$",
-            r"(?:similar to|zoals)\s+([a-zA-Z0-9\s]+)$",
+            r"(?:similar to)\s+([a-zA-Z0-9\s]+)$",
         ]
         q = query.strip().lower()
         for pattern in patterns:
@@ -835,7 +852,7 @@ class SongRecommender:
             track_title_tokens = set(self._tokenize(str(track_hint.get("title", ""))))
             artist_tokens = self._tokenize(artist_hint)
             # Avoid false positives where a single token from the song title is treated as an artist.
-            if (len(artist_tokens) <= 1 and artist_hint in track_title_tokens) or (artist_hint in track_title_tokens):
+            if artist_hint in track_title_tokens:
                 artist_hint = None
         track_hint_artist = self._artist_key(str(track_hint.get("artist", ""))) if track_hint else ""
         reference_year = self._track_reference_year(track_hint)
