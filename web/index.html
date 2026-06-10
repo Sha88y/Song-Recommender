@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SongSuggest AI</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --accent: #1d4ed8;
+      --muted: #6b7280;
+      --border: #dbe3ef;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #eef3ff 0%, var(--bg) 40%, #f9fbff 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      width: min(900px, 92vw);
+      margin: 36px auto;
+    }
+
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(18, 30, 60, 0.08);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.8rem;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .grid {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    textarea,
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 1rem;
+      background: #fff;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .controls label {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 11px 16px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .meta {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .results {
+      margin-top: 20px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .title {
+      margin: 0;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .detail {
+      margin: 4px 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .error {
+      margin-top: 16px;
+      color: #b91c1c;
+      font-weight: 600;
+    }
+
+    .loading {
+      margin-top: 12px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid #d7e2f6;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="hero">
+      <h1>Song Recommender</h1>
+      <p class="sub">Type in what type of music you would want to hear.</p>
+      <p class="sub">You can type in genres, artist, songs, vibes.</p>
+      <div class="grid">
+        <label for="query">What do you want to hear?</label>
+        <textarea id="query" rows="3" placeholder="Example: I want nu metal in the style of Korn"></textarea>
+
+        <div class="controls">
+          <label for="topK">Suggestions</label>
+          <input id="topK" type="number" min="3" max="10" value="5" />
+
+          <label>
+            <input id="excludeArtist" type="checkbox" checked />
+            Exclude exact reference artist
+          </label>
+
+          <button id="runBtn" type="button">Get Suggestions</button>
+        </div>
+      </div>
+
+      <div id="meta" class="meta"></div>
+      <div id="loading" class="loading">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>let me cook up some tunes...</span>
+      </div>
+      <div id="error" class="error"></div>
+      <div id="results" class="results"></div>
+    </section>
+  </main>
+
+  <script>
+    const runBtn = document.getElementById("runBtn");
+    const queryEl = document.getElementById("query");
+    const topKEl = document.getElementById("topK");
+    const excludeArtistEl = document.getElementById("excludeArtist");
+    const resultsEl = document.getElementById("results");
+    const metaEl = document.getElementById("meta");
+    const errorEl = document.getElementById("error");
+    const loadingEl = document.getElementById("loading");
+
+    function renderResults(data) {
+      metaEl.textContent = `Source: ${data.source} | Mode: ${data.mode}`;
+      resultsEl.innerHTML = "";
+      if (!data.results.length) {
+        resultsEl.innerHTML = "<div class='card'>No results found. Try a different request.</div>";
+        return;
+      }
+
+      for (const rec of data.results) {
+        const item = document.createElement("article");
+        item.className = "card";
+        item.innerHTML = `
+          <p class="title">${rec.title}</p>
+          <p class="detail">${rec.artist} (${rec.genre})</p>
+          <p class="detail">Score: ${rec.score.toFixed(3)}</p>
+          <p class="detail">Why: ${rec.reason}</p>
+        `;
+        resultsEl.appendChild(item);
+      }
+    }
+
+    async function runRecommendation() {
+      errorEl.textContent = "";
+      resultsEl.innerHTML = "";
+
+      const query = queryEl.value.trim();
+      if (!query) {
+        errorEl.textContent = "Please enter a request first.";
+        return;
+      }
+
+      const topK = Number(topKEl.value);
+      runBtn.disabled = true;
+      runBtn.textContent = "Thinking...";
+      loadingEl.style.display = "flex";
+
+      try {
+        const response = await fetch("/api/recommend", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query,
+            top_k: topK,
+            exclude_reference_artist: excludeArtistEl.checked,
+          }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Request failed");
+        }
+
+        renderResults(data);
+      } catch (err) {
+        errorEl.textContent = err.message || "Something went wrong.";
+      } finally {
+        loadingEl.style.display = "none";
+        runBtn.disabled = false;
+        runBtn.textContent = "Get Suggestions";
+      }
+    }
+
+    runBtn.addEventListener("click", runRecommendation);
+  </script>
+</body>
+</html>

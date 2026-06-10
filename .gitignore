@@ -1,0 +1,8 @@
+__pycache__/
+.venv/
+.venv-cpython312/
+.env
+.cache/
+*.pyc
+.ipynb_checkpoints/
+data/archive.zip

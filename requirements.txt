@@ -1,0 +1,4 @@
+# Optional dependencies (install on VM for web + embedding mode):
+# gradio==5.34.2
+# sentence-transformers
+# numpy
