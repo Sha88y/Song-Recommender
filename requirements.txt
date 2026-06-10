@@ -1,4 +1,6 @@
-# Optional dependencies (install on VM for web + embedding mode):
-# gradio==5.34.2
-# sentence-transformers
-# numpy
+# Full runtime dependencies (embedding-enabled setup)
+numpy==2.4.6
+sentence-transformers==5.5.1
+
+# Optional UI dependency (only needed for app.py Gradio mode)
+gradio==5.34.2

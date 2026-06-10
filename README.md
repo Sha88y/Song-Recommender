@@ -24,11 +24,14 @@ You describe what you want to hear (for example: "I want nu metal in the style o
 
 ## Setup (Windows)
 1. Create virtual environment:
-   - `python -m venv .venv`
+   - `python -m venv .venv-cpython312`
 2. Activate environment:
-   - `\.venv\Scripts\Activate.ps1`
+   - `\.venv-cpython312\Scripts\Activate.ps1`
+3. Install dependencies (full setup, including embedding mode):
+   - `pip install -r requirements.txt`
 
-No mandatory package install is needed for CLI mode.
+Minimal note:
+- If you want lexical-only behavior, the app can run without these extra packages.
 
 ## Run
 - `python webapp.py`
@@ -53,6 +56,8 @@ Alternative run mode:
 ## Notes
 - This MVP uses multiple Kaggle tables together (tracks + artist + genre + year).
 - Base setup runs in lexical mode (no heavy ML dependencies required).
+- Not every song/artist can be requested or returned: recommendations are limited to what exists in the included dataset.
+- Expanding to near-complete music coverage would require a much larger dataset and heavier storage/compute.
 
 ## Which AI Is Used?
 The app uses a content-based recommender in `src/recommender.py`.
@@ -111,8 +116,5 @@ For each user query, the recommender combines multiple signals:
 
 Each result includes a short reason so you can see why it was selected.
 
-## Optional Upgrade (VM)
-Install embedding dependencies when your VM environment is ready:
-- `pip install gradio sentence-transformers numpy`
-
-Then restart the app. It will automatically switch from `lexical` mode to `embedding` mode.
+# Conclusion
+This project is a focused implementation of a text-driven music recommendation system using a hybrid content-based approach. It combines lexical query understanding with audio-feature similarity and optional embedding-based semantic matching to deliver personalized song suggestions from the Spotify dataset. The app runs locally with minimal dependencies, making it accessible while still demonstrating core AI concepts in recommendation systems.
