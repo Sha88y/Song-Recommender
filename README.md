@@ -46,6 +46,20 @@ Optional environment config:
 Alternative run mode:
 - `python app.py` (CLI by default, Gradio only if installed)
 
+## Run with Docker on VM
+1. Build and start:
+   - `docker compose up --build -d`
+2. Open:
+   - `http://<VM-IP>:8000`
+3. View logs:
+   - `docker compose logs -f`
+4. Stop:
+   - `docker compose down`
+
+Notes:
+- The container exposes port `8000` and binds the app to `0.0.0.0`.
+- Make sure VM firewall/security rules allow inbound TCP on `8000`.
+
 ## Use Kaggle Dataset
 1. Download the Kaggle Spotify archive zip.
 2. Place it at `data/archive.zip`.

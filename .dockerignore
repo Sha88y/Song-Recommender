@@ -1,0 +1,12 @@
+.git
+.gitignore
+.venv
+.venv-cpython312
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.log
+.env
+.vscode
+memories

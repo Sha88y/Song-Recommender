@@ -9,7 +9,6 @@ from src.recommender import SongRecommender
 PROJECT_ROOT = Path(__file__).resolve().parent
 WEB_DIR = PROJECT_ROOT / "web"
 DATASET_PATH = PROJECT_ROOT / "data" / "spotify_tracks.csv"
-DEFAULT_VM_ACCESS_IP = "100.126.142.125"
 
 
 def _load_env_file() -> None:
@@ -35,6 +34,9 @@ def _resolve_host() -> str:
     if env_host:
         return env_host.strip()
 
+    if Path("/.dockerenv").exists() or os.getenv("RUNNING_IN_DOCKER") == "1":
+        return "0.0.0.0"
+
     # When running from an SSH session (typical VM usage), expose on all interfaces.
     if os.getenv("SSH_CONNECTION") or os.getenv("SSH_TTY"):
         return "0.0.0.0"
@@ -58,8 +60,11 @@ def _resolve_access_host(bind_host: str) -> str:
     if bind_host == "127.0.0.1":
         return "127.0.0.1"
 
-    if bind_host == "0.0.0.0" and (os.getenv("SSH_CONNECTION") or os.getenv("SSH_TTY")):
-        return DEFAULT_VM_ACCESS_IP
+    if bind_host == "0.0.0.0" and os.getenv("SSH_CONNECTION"):
+        # SSH_CONNECTION format: "<client_ip> <client_port> <server_ip> <server_port>"
+        parts = os.getenv("SSH_CONNECTION", "").split()
+        if len(parts) >= 3:
+            return parts[2]
 
     return bind_host
 

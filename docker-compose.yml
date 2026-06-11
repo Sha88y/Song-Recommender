@@ -1,0 +1,12 @@
+services:
+  songsuggest:
+    build: .
+    container_name: ${SONGSUGGEST_CONTAINER_NAME:-songsuggest-ai}
+    ports:
+      - "${SONGSUGGEST_PORT:-8000}:${SONGSUGGEST_PORT:-8000}"
+    environment:
+      SONGSUGGEST_HOST: ${SONGSUGGEST_HOST:-0.0.0.0}
+      SONGSUGGEST_PORT: ${SONGSUGGEST_PORT:-8000}
+      SONGSUGGEST_ACCESS_HOST: ${SONGSUGGEST_ACCESS_HOST:-}
+      RUNNING_IN_DOCKER: ${RUNNING_IN_DOCKER:-1}
+    restart: unless-stopped
