@@ -9,8 +9,65 @@ from src.recommender import SongRecommender
 PROJECT_ROOT = Path(__file__).resolve().parent
 WEB_DIR = PROJECT_ROOT / "web"
 DATASET_PATH = PROJECT_ROOT / "data" / "spotify_tracks.csv"
-HOST = "0.0.0.0"
-PORT = 8000
+DEFAULT_VM_ACCESS_IP = "100.126.142.125"
+
+
+def _load_env_file() -> None:
+    env_path = PROJECT_ROOT / ".env"
+    if not env_path.exists():
+        return
+
+    with open(env_path, "r", encoding="utf-8") as handle:
+        for raw_line in handle:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key:
+                os.environ.setdefault(key, value)
+
+
+def _resolve_host() -> str:
+    env_host = os.getenv("SONGSUGGEST_HOST")
+    if env_host:
+        return env_host.strip()
+
+    # When running from an SSH session (typical VM usage), expose on all interfaces.
+    if os.getenv("SSH_CONNECTION") or os.getenv("SSH_TTY"):
+        return "0.0.0.0"
+
+    return "127.0.0.1"
+
+
+def _resolve_port() -> int:
+    env_port = os.getenv("SONGSUGGEST_PORT", "8000").strip()
+    try:
+        return int(env_port)
+    except ValueError:
+        return 8000
+
+
+def _resolve_access_host(bind_host: str) -> str:
+    env_access_host = os.getenv("SONGSUGGEST_ACCESS_HOST")
+    if env_access_host:
+        return env_access_host.strip()
+
+    if bind_host == "127.0.0.1":
+        return "127.0.0.1"
+
+    if bind_host == "0.0.0.0" and (os.getenv("SSH_CONNECTION") or os.getenv("SSH_TTY")):
+        return DEFAULT_VM_ACCESS_IP
+
+    return bind_host
+
+
+_load_env_file()
+HOST = _resolve_host()
+PORT = _resolve_port()
+ACCESS_HOST = _resolve_access_host(HOST)
 
 
 if not DATASET_PATH.exists():
@@ -80,5 +137,7 @@ class AppHandler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     server = ThreadingHTTPServer((HOST, PORT), AppHandler)
-    print(f"SongSuggest AI web server running at http://{HOST}:{PORT}")
+    if HOST == "0.0.0.0":
+        print(f"SongSuggest AI web server running on all interfaces (port {PORT})")
+    print(f"Open in browser: http://{ACCESS_HOST}:{PORT}")
     server.serve_forever()

@@ -38,6 +38,11 @@ Minimal note:
 
 Open `http://127.0.0.1:8000` in your browser.
 
+Optional environment config:
+- Copy `.env.example` to `.env`
+- Set `SONGSUGGEST_HOST`, `SONGSUGGEST_PORT`, and `SONGSUGGEST_ACCESS_HOST` when needed
+- The app auto-loads `.env` on startup
+
 Alternative run mode:
 - `python app.py` (CLI by default, Gradio only if installed)
 
