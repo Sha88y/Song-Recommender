@@ -9,7 +9,7 @@ from src.recommender import SongRecommender
 PROJECT_ROOT = Path(__file__).resolve().parent
 WEB_DIR = PROJECT_ROOT / "web"
 DATASET_PATH = PROJECT_ROOT / "data" / "spotify_tracks.csv"
-HOST = "127.0.0.1"
+HOST = "0.0.0.0"
 PORT = 8000
 
 
