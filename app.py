@@ -1,5 +1,4 @@
 import os
-import importlib
 
 from src.recommender import SongRecommender
 
@@ -14,12 +13,6 @@ if not os.path.exists(ACTIVE_DATASET):
     )
 
 recommender = SongRecommender(csv_path=ACTIVE_DATASET)
-
-gr = None
-try:
-    gr = importlib.import_module("gradio")
-except ModuleNotFoundError:
-    gr = None
 
 
 def recommend_songs(query: str, top_k: int, exclude_reference_artist: bool):
@@ -56,36 +49,5 @@ def run_cli() -> None:
         print()
 
 
-def build_gradio_app():
-    return gr.Interface(
-        fn=recommend_songs,
-        inputs=[
-            gr.Textbox(
-                label="What do you want to listen to?",
-                placeholder="Example: I want metal in the style of Korn",
-                lines=2,
-            ),
-            gr.Slider(3, 10, value=5, step=1, label="How many suggestions?"),
-            gr.Checkbox(value=True, label="Exclude the exact reference artist from results"),
-        ],
-        outputs=gr.Markdown(label="AI Suggestions"),
-        title="SongSuggest AI",
-        description=(
-            "Content-based song recommender on Kaggle Spotify data. "
-            "Uses lexical mode by default and switches to embedding mode when sentence-transformers is installed. "
-            "Dataset path: data/spotify_tracks.csv"
-        ),
-        examples=[
-            ["I want nu metal in the style of Korn", 5, True],
-            ["Give me dark melodic alternative metal", 5, False],
-            ["I want classic heavy metal with fast riffs", 5, False],
-        ],
-    )
-
-
 if __name__ == "__main__":
-    if gr is None:
-        run_cli()
-    else:
-        demo = build_gradio_app()
-        demo.launch()
+    run_cli()

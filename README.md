@@ -7,11 +7,10 @@ You describe what you want to hear (for example: "I want nu metal in the style o
 ## Stack
 - Python
 - Built-in CLI (works without extra packages)
-- Optional: Gradio (web UI)
 - Optional: Sentence Transformers + NumPy (embedding mode)
 
 ## Project Structure
-- `app.py`: CLI and optional Gradio launcher
+- `app.py`: CLI launcher
 - `webapp.py`: dependency-free web server
 - `web/index.html`: simple web interface
 - `src/recommender.py`: recommendation logic
@@ -44,7 +43,7 @@ Optional environment config:
 - The app auto-loads `.env` on startup
 
 Alternative run mode:
-- `python app.py` (CLI by default, Gradio only if installed)
+- `python app.py` (CLI)
 
 ## Run with Docker on VM
 1. Start:
